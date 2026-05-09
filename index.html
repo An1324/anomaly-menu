@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anomaly Protocol — Menu Background</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+  /* FALLBACK: If Google Fonts is unavailable, uses system monospace */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #0a0a0a;
+    font-family: 'Share Tech Mono', 'Consolas', 'Courier New', 'Lucida Console', monospace;
+    user-select: none;
+  }
+
+  /* ===== CANVAS LAYERS ===== */
+  canvas#noise-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    opacity: 0.06;
+    pointer-events: none;
+  }
+
+  /* ===== GRID OVERLAY ===== */
+  .grid-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(139,0,0,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139,0,0,0.03) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+
+
+
+
+  /* ===== SECOND SCANNER (subtler, offset) ===== */
+  .scanner-sweep-2 {
+    position: fixed;
+    top: -100px;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    z-index: 4;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(255, 60, 60, 0.03) 40%,
+      rgba(255, 80, 80, 0.08) 50%,
+      rgba(255, 60, 60, 0.03) 60%,
+      transparent 100%
+    );
+    animation: scanDown2 14s linear infinite;
+    animation-delay: 5s;
+  }
+
+  @keyframes scanDown2 {
+    0%   { top: -100px; }
+    100% { top: calc(100vh + 100px); }
+  }
+
+  /* ===== VIGNETTE ===== */
+  .vignette {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 5;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 40%,
+      rgba(0,0,0,0.4) 70%,
+      rgba(0,0,0,0.85) 100%
+    );
+  }
+
+
+
+  /* ===== FLOATING PARTICLES (dust/embers) ===== */
+  .particle {
+    position: fixed;
+    width: 2px;
+    height: 2px;
+    background: rgba(196, 30, 58, 0.4);
+    border-radius: 50%;
+    z-index: 3;
+    pointer-events: none;
+    animation: floatUp linear infinite;
+  }
+
+  @keyframes floatUp {
+    0%   { transform: translateY(0) translateX(0); opacity: 0; }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.3; }
+    100% { transform: translateY(-100vh) translateX(30px); opacity: 0; }
+  }
+
+  /* ===== CORNER BRACKETS (containment UI) ===== */
+  .corner {
+    position: fixed;
+    width: 90px;
+    height: 90px;
+    z-index: 7;
+    pointer-events: none;
+    opacity: 0.35;
+  }
+  .corner-tl { top: 30px; left: 30px; border-top: 2px solid #C41E3A; border-left: 2px solid #C41E3A; }
+  .corner-tr { top: 30px; right: 30px; border-top: 2px solid #C41E3A; border-right: 2px solid #C41E3A; }
+  .corner-bl { bottom: 30px; left: 30px; border-bottom: 2px solid #C41E3A; border-left: 2px solid #C41E3A; }
+  .corner-br { bottom: 30px; right: 30px; border-bottom: 2px solid #C41E3A; border-right: 2px solid #C41E3A; }
+
+  /* ===== HUD TEXT ELEMENTS ===== */
+  .hud-text {
+    position: fixed;
+    z-index: 8;
+    color: rgba(200, 40, 60, 0.45);
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+  .hud-top-left {
+    top: 38px; left: 38px;
+  }
+  .hud-top-right {
+    top: 38px; right: 38px;
+    text-align: right;
+  }
+  .hud-bottom-left {
+    bottom: 38px; left: 38px;
+  }
+  .hud-bottom-right {
+    bottom: 38px; right: 38px;
+    text-align: right;
+  }
+
+  .hud-text .blink {
+    animation: blinkText 2s step-end infinite;
+  }
+  @keyframes blinkText {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  /* ===== CENTRAL RED EYE / PULSE ===== */
+  .center-pulse {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(
+      circle,
+      rgba(139, 0, 0, 0.06) 0%,
+      rgba(139, 0, 0, 0.02) 40%,
+      transparent 70%
+    );
+    animation: pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+    50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+  }
+
+  /* ===== HEXAGON GRID (subtle background pattern) ===== */
+  .hex-pattern {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.015;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52'%3E%3Cpath d='M30 0L60 15v22L30 52 0 37V15z' fill='none' stroke='%238B0000' stroke-width='0.5'/%3E%3C/svg%3E");
+    background-size: 60px 52px;
+  }
+
+  /* ===== TITLE SECTION (eye + text) ===== */
+  .title-section {
+    position: fixed;
+    top: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 8;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* Eye container */
+  .eye {
+    width: 300px;
+    height: 150px;
+    position: relative;
+    filter: drop-shadow(0 0 40px rgba(196, 30, 58, 0.45));
+  }
+
+  /* Outer glow ring */
+  .eye-glow {
+    position: absolute;
+    top: -25px; left: -25px;
+    width: 350px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(139, 0, 0, 0.12) 0%, transparent 70%);
+    animation: eyeGlow 3s ease-in-out infinite;
+  }
+
+  @keyframes eyeGlow {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+
+  /* Eye outer shape (sclera) */
+  .eye-outer {
+    width: 300px;
+    height: 150px;
+    border-radius: 50%;
+    border: 2px solid rgba(196, 30, 58, 0.7);
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(ellipse, rgba(20, 5, 5, 0.95) 0%, rgba(10, 2, 2, 1) 100%);
+    box-shadow:
+      0 0 30px rgba(139, 0, 0, 0.4),
+      0 0 60px rgba(139, 0, 0, 0.15),
+      inset 0 0 20px rgba(139, 0, 0, 0.2),
+      inset 0 0 40px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Blood veins */
+  .eye-vein {
+    position: absolute;
+    background: rgba(139, 0, 0, 0.25);
+    border-radius: 2px;
+    transform-origin: center;
+  }
+  .vein-1 { width: 70px; height: 1px; top: 35px; left: 12px; transform: rotate(15deg); }
+  .vein-2 { width: 60px; height: 1px; top: 105px; left: 14px; transform: rotate(-12deg); }
+  .vein-3 { width: 65px; height: 1px; top: 40px; right: 12px; transform: rotate(-20deg); }
+  .vein-4 { width: 55px; height: 1px; top: 100px; right: 16px; transform: rotate(18deg); }
+  .vein-5 { width: 48px; height: 1px; top: 28px; left: 35px; transform: rotate(35deg); }
+  .vein-6 { width: 42px; height: 1px; top: 115px; right: 30px; transform: rotate(-30deg); }
+
+  /* Iris — outer ring */
+  .eye-iris-outer {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      rgba(120, 10, 20, 0.8),
+      rgba(180, 30, 50, 0.6),
+      rgba(100, 5, 15, 0.9),
+      rgba(196, 30, 58, 0.7),
+      rgba(80, 5, 10, 0.8),
+      rgba(160, 25, 40, 0.6),
+      rgba(120, 10, 20, 0.8)
+    );
+    box-shadow: 0 0 15px rgba(196, 30, 58, 0.5), inset 0 0 8px rgba(0, 0, 0, 0.5);
+    animation: irisRotate 20s linear infinite, irisPulse 4s ease-in-out infinite;
+  }
+
+  @keyframes irisRotate {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  /* Iris — inner ring */
+  .eye-iris-inner {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(220, 50, 70, 0.9) 0%,
+      rgba(160, 20, 40, 0.8) 40%,
+      rgba(100, 10, 20, 0.6) 70%,
+      transparent 100%
+    );
+    border: 1px solid rgba(255, 80, 80, 0.15);
+    animation: irisRotate 15s linear infinite reverse;
+  }
+
+  /* Iris texture lines (radial fibers) */
+  .eye-iris-texture {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(
+      from 0deg,
+      rgba(255, 100, 100, 0.08) 0deg 3deg,
+      transparent 3deg 12deg
+    );
+    animation: irisRotate 30s linear infinite;
+  }
+
+  /* Pupil — vertical slit */
+  .eye-pupil {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 44px;
+    border-radius: 50%;
+    background: #000;
+    box-shadow:
+      0 0 8px rgba(0, 0, 0, 0.9),
+      0 0 15px rgba(0, 0, 0, 0.5);
+    animation: pupilPulse 4s ease-in-out infinite;
+  }
+
+  @keyframes pupilPulse {
+    0%, 100% { width: 14px; height: 44px; }
+    50% { width: 16px; height: 36px; }
+  }
+
+  /* Glint (primary) */
+  .eye-glint {
+    position: absolute;
+    top: 30%; left: 58%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 180, 180, 0.8);
+    box-shadow: 0 0 4px rgba(255, 200, 200, 0.6);
+  }
+
+  /* Glint (secondary, smaller) */
+  .eye-glint-2 {
+    position: absolute;
+    top: 58%; left: 40%;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: rgba(255, 160, 160, 0.5);
+  }
+
+  /* Subtle iris pulse */
+  @keyframes irisPulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(196, 30, 58, 0.5); }
+    50% { box-shadow: 0 0 30px rgba(196, 30, 58, 0.8), 0 0 50px rgba(139, 0, 0, 0.3); }
+  }
+
+  /* Eyelid blink */
+  .eye-lid-top, .eye-lid-bottom {
+    position: absolute;
+    left: -2px;
+    width: 304px;
+    height: 80px;
+    background: #0a0a0a;
+    z-index: 2;
+  }
+  .eye-lid-top {
+    top: -74px;
+    border-bottom: 1px solid rgba(196, 30, 58, 0.3);
+    animation: blinkTop 6s ease-in-out infinite;
+  }
+  .eye-lid-bottom {
+    bottom: -74px;
+    border-top: 1px solid rgba(196, 30, 58, 0.3);
+    animation: blinkBottom 6s ease-in-out infinite;
+  }
+
+  @keyframes blinkTop {
+    0%, 42%, 48%, 100% { transform: translateY(0); }
+    45% { transform: translateY(70px); }
+  }
+  @keyframes blinkBottom {
+    0%, 42%, 48%, 100% { transform: translateY(0); }
+    45% { transform: translateY(-70px); }
+  }
+
+  /* Title text */
+  .title-text {
+    font-family: 'Share Tech Mono', 'Consolas', 'Courier New', 'Lucida Console', monospace;
+    font-size: 56px;
+    letter-spacing: 20px;
+    padding-left: 20px;
+    text-transform: uppercase;
+    color: rgba(210, 40, 60, 0.7);
+    text-shadow:
+      0 0 10px rgba(196, 30, 58, 0.6),
+      0 0 30px rgba(139, 0, 0, 0.4),
+      0 0 60px rgba(139, 0, 0, 0.15),
+      0 2px 4px rgba(0, 0, 0, 0.8);
+    position: relative;
+    animation: titleGlitch 8s infinite;
+  }
+
+  @keyframes titleGlitch {
+    0%, 92%, 100% { transform: none; opacity: 1; }
+    93% { transform: translateX(-3px) skewX(-0.5deg); opacity: 0.85; }
+    94% { transform: translateX(2px); opacity: 1; }
+    95% { transform: none; opacity: 0.9; }
+    96% { transform: translateX(1px) skewX(0.3deg); opacity: 1; }
+  }
+
+  /* Thin line separator */
+  .title-line {
+    width: 350px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(196, 30, 58, 0.5), transparent);
+    box-shadow: 0 0 8px rgba(196, 30, 58, 0.2);
+  }
+</style>
+</head>
+<body>
+
+  <!-- Noise canvas -->
+  <canvas id="noise-canvas"></canvas>
+
+  <!-- Hex pattern background -->
+  <div class="hex-pattern"></div>
+
+  <!-- Center red pulse -->
+  <div class="center-pulse"></div>
+
+  <!-- Grid overlay -->
+  <div class="grid-overlay"></div>
+
+  <!-- Scanner sweep -->
+  <div class="scanner-sweep-2"></div>
+
+  <!-- Vignette -->
+  <div class="vignette"></div>
+
+
+  <!-- Title section -->
+  <div class="title-section">
+    <div class="eye">
+      <div class="eye-glow"></div>
+      <div class="eye-outer">
+        <div class="eye-vein vein-1"></div>
+        <div class="eye-vein vein-2"></div>
+        <div class="eye-vein vein-3"></div>
+        <div class="eye-vein vein-4"></div>
+        <div class="eye-vein vein-5"></div>
+        <div class="eye-vein vein-6"></div>
+        <div class="eye-iris-texture"></div>
+        <div class="eye-iris-outer">
+          <div class="eye-iris-inner"></div>
+        </div>
+        <div class="eye-pupil"></div>
+        <div class="eye-glint"></div>
+        <div class="eye-glint-2"></div>
+        <div class="eye-lid-top"></div>
+        <div class="eye-lid-bottom"></div>
+      </div>
+    </div>
+    <div class="title-line"></div>
+    <div class="title-text">Anomaly Protocol</div>
+  </div>
+
+  <!-- Corner brackets -->
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <!-- HUD text -->
+  <div class="hud-text hud-top-left">
+    SYS://CONTAINMENT_PROTOCOL<br>
+    <span style="color: rgba(196,30,58,0.25);">STATUS: <span class="blink">ACTIVE</span></span>
+  </div>
+  <div class="hud-text hud-top-right">
+    FACILITY-07 // SECTOR-4<br>
+    <span style="color: rgba(196,30,58,0.25);">CLEARANCE: ██████</span>
+  </div>
+  <div class="hud-text hud-bottom-left">
+    SURVEILLANCE FEED #0471<br>
+    <span id="timestamp" style="color: rgba(196,30,58,0.25);"></span>
+  </div>
+  <div class="hud-text hud-bottom-right">
+    ANOMALY PROTOCOL v2.1<br>
+    <span style="color: rgba(196,30,58,0.25);">BREACH LEVEL: <span class="blink" style="color: rgba(255,50,50,0.3);">KETER</span></span>
+  </div>
+
+  <script>
+    // ===== NOISE CANVAS =====
+    const canvas = document.getElementById('noise-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth / 4;
+      canvas.height = window.innerHeight / 4;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    function renderNoise() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const imageData = ctx.createImageData(w, h);
+      const data = imageData.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const v = Math.random() * 255;
+        data[i] = v * 0.3;
+        data[i+1] = v * 0.15;
+        data[i+2] = v * 0.15;
+        data[i+3] = 255;
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      requestAnimationFrame(renderNoise);
+    }
+    renderNoise();
+
+    // ===== FLOATING PARTICLES =====
+    function createParticle() {
+      const p = document.createElement('div');
+      p.classList.add('particle');
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.bottom = '-10px';
+      p.style.width = (1 + Math.random() * 2) + 'px';
+      p.style.height = p.style.width;
+      p.style.opacity = 0.2 + Math.random() * 0.4;
+
+      const duration = 8 + Math.random() * 12;
+      p.style.animationDuration = duration + 's';
+      p.style.animationDelay = Math.random() * 2 + 's';
+
+      if (Math.random() > 0.6) {
+        p.style.background = `rgba(${150 + Math.random()*50}, ${140 + Math.random()*30}, ${140 + Math.random()*30}, 0.3)`;
+      }
+
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), (duration + 2) * 1000);
+    }
+
+    for (let i = 0; i < 15; i++) {
+      setTimeout(createParticle, Math.random() * 5000);
+    }
+    setInterval(createParticle, 800);
+
+    // ===== TIMESTAMP =====
+    function updateTimestamp() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      const ms = String(now.getMilliseconds()).padStart(3, '0');
+      document.getElementById('timestamp').textContent = `${h}:${m}:${s}.${ms}`;
+      requestAnimationFrame(updateTimestamp);
+    }
+    updateTimestamp();
+  </script>
+
+</body>
+</html>
