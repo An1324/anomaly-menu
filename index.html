@@ -5,575 +5,191 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Anomaly Protocol — Menu Background</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-  /* FALLBACK: If Google Fonts is unavailable, uses system monospace */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:100vw;height:100vh;overflow:hidden;background:#080404;font-family:'Share Tech Mono',monospace;user-select:none}
+canvas#noise-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;opacity:.07;pointer-events:none}
+.grid-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2;pointer-events:none;background-image:linear-gradient(rgba(139,0,0,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(139,0,0,.03) 1px,transparent 1px);background-size:64px 64px}
+.scanner-sweep-2{position:fixed;top:-100px;left:0;width:100%;height:100px;z-index:4;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(255,60,60,.03) 40%,rgba(255,80,80,.08) 50%,rgba(255,60,60,.03) 60%,transparent);animation:scanDown2 14s linear infinite;animation-delay:5s}
+@keyframes scanDown2{0%{top:-100px}100%{top:calc(100vh + 100px)}}
+.vignette{position:fixed;top:0;left:0;width:100%;height:100%;z-index:5;pointer-events:none;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.4) 70%,rgba(0,0,0,.85) 100%)}
+.particle{position:fixed;width:2px;height:2px;background:rgba(196,30,58,.4);border-radius:50%;z-index:3;pointer-events:none;animation:floatUp linear infinite}
+@keyframes floatUp{0%{transform:translateY(0) translateX(0);opacity:0}10%{opacity:.6}90%{opacity:.3}100%{transform:translateY(-100vh) translateX(30px);opacity:0}}
+.corner{position:fixed;width:90px;height:90px;z-index:7;pointer-events:none;opacity:.35;animation:cornerPulse 4s ease-in-out infinite}
+@keyframes cornerPulse{0%,100%{opacity:.25}50%{opacity:.55}}
+.corner-tl{top:30px;left:30px;border-top:2px solid #C41E3A;border-left:2px solid #C41E3A}
+.corner-tr{top:30px;right:30px;border-top:2px solid #C41E3A;border-right:2px solid #C41E3A}
+.corner-bl{bottom:30px;left:30px;border-bottom:2px solid #C41E3A;border-left:2px solid #C41E3A}
+.corner-br{bottom:30px;right:30px;border-bottom:2px solid #C41E3A;border-right:2px solid #C41E3A}
+.hud-text{position:fixed;z-index:8;color:rgba(200,40,60,.45);font-size:13px;letter-spacing:3px;text-transform:uppercase;pointer-events:none}
+.hud-top-left{top:38px;left:38px}.hud-top-right{top:38px;right:38px;text-align:right}
+.hud-bottom-left{bottom:38px;left:38px}.hud-bottom-right{bottom:38px;right:38px;text-align:right}
+.hud-text .blink{animation:blinkText 2s step-end infinite}
+@keyframes blinkText{0%,50%{opacity:1}51%,100%{opacity:0}}
+.hex-pattern{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;opacity:.015;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52'%3E%3Cpath d='M30 0L60 15v22L30 52 0 37V15z' fill='none' stroke='%238B0000' stroke-width='0.5'/%3E%3C/svg%3E");background-size:60px 52px}
+.center-pulse{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;border-radius:50%;z-index:1;pointer-events:none;background:radial-gradient(circle,rgba(139,0,0,.06),rgba(139,0,0,.02) 40%,transparent 70%);animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.5}50%{transform:translate(-50%,-50%) scale(1.3);opacity:1}}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    background: #0a0a0a;
-    font-family: 'Share Tech Mono', 'Consolas', 'Courier New', 'Lucida Console', monospace;
-    user-select: none;
-  }
-
-  /* ===== CANVAS LAYERS ===== */
-  canvas#noise-canvas {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 1;
-    opacity: 0.06;
-    pointer-events: none;
-  }
-
-  /* ===== GRID OVERLAY ===== */
-  .grid-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 2;
-    pointer-events: none;
-    background-image:
-      linear-gradient(rgba(139,0,0,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(139,0,0,0.03) 1px, transparent 1px);
-    background-size: 64px 64px;
-  }
+/* CRT Scanlines */
+.crt-lines{position:fixed;top:0;left:0;width:100%;height:100%;z-index:6;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px)}
 
 
 
+/* === TITLE === */
+.title-section{position:fixed;top:8%;left:50%;transform:translateX(-50%);z-index:8;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:20px}
+.title-text{font-size:56px;letter-spacing:20px;padding-left:20px;white-space:nowrap;text-transform:uppercase;color:rgba(210,40,60,.7);text-shadow:0 0 10px rgba(196,30,58,.6),0 0 30px rgba(139,0,0,.4),0 0 60px rgba(139,0,0,.15),0 2px 4px rgba(0,0,0,.8);position:relative;animation:titleGlitch 8s infinite}
+.title-text::before,.title-text::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;opacity:0}
+.title-text::before{color:rgba(255,0,0,.4);animation:rgbShift 8s infinite}
+.title-text::after{color:rgba(0,100,255,.25);animation:rgbShift2 8s infinite}
+@keyframes titleGlitch{0%,92%,100%{transform:none;opacity:1}93%{transform:translateX(-3px) skewX(-.5deg);opacity:.85}94%{transform:translateX(2px);opacity:1}95%{transform:none;opacity:.9}96%{transform:translateX(1px) skewX(.3deg);opacity:1}}
+@keyframes rgbShift{0%,91%,97%,100%{opacity:0;transform:none}93%{opacity:.7;transform:translateX(-4px)}95%{opacity:.5;transform:translateX(3px)}}
+@keyframes rgbShift2{0%,91%,97%,100%{opacity:0;transform:none}93%{opacity:.5;transform:translateX(4px)}95%{opacity:.3;transform:translateX(-3px)}}
+.title-line{width:350px;height:1px;background:linear-gradient(90deg,transparent,rgba(196,30,58,.5),transparent);box-shadow:0 0 8px rgba(196,30,58,.2)}
 
-
-  /* ===== SECOND SCANNER (subtler, offset) ===== */
-  .scanner-sweep-2 {
-    position: fixed;
-    top: -100px;
-    left: 0;
-    width: 100%;
-    height: 100px;
-    z-index: 4;
-    pointer-events: none;
-    background: linear-gradient(
-      180deg,
-      transparent 0%,
-      rgba(255, 60, 60, 0.03) 40%,
-      rgba(255, 80, 80, 0.08) 50%,
-      rgba(255, 60, 60, 0.03) 60%,
-      transparent 100%
-    );
-    animation: scanDown2 14s linear infinite;
-    animation-delay: 5s;
-  }
-
-  @keyframes scanDown2 {
-    0%   { top: -100px; }
-    100% { top: calc(100vh + 100px); }
-  }
-
-  /* ===== VIGNETTE ===== */
-  .vignette {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 5;
-    pointer-events: none;
-    background: radial-gradient(
-      ellipse at center,
-      transparent 40%,
-      rgba(0,0,0,0.4) 70%,
-      rgba(0,0,0,0.85) 100%
-    );
-  }
+/* === EYE V3 HORROR === */
+.eye{width:340px;height:170px;position:relative;filter:drop-shadow(0 0 60px rgba(196,30,58,.55))}
+.eye-glow{position:absolute;top:-35px;left:-35px;width:410px;height:240px;border-radius:50%;background:radial-gradient(ellipse,rgba(139,0,0,.18),transparent 70%);animation:heartbeat 1.6s ease-in-out infinite}
+@keyframes heartbeat{0%{opacity:.3;transform:scale(1)}12%{opacity:1;transform:scale(1.1)}28%{opacity:.4;transform:scale(1.02)}42%{opacity:.85;transform:scale(1.07)}65%{opacity:.25;transform:scale(.98)}100%{opacity:.3;transform:scale(1)}}
+.eye-outer{width:340px;height:170px;border-radius:50%;border:2px solid rgba(196,30,58,.6);position:relative;overflow:hidden;background:radial-gradient(ellipse at 48% 50%,rgba(30,8,10,.95),rgba(8,2,3,1));box-shadow:0 0 40px rgba(139,0,0,.5),0 0 80px rgba(139,0,0,.15),inset 0 0 30px rgba(139,0,0,.3),inset 0 0 60px rgba(0,0,0,.6);animation:eyeTwitch 8s ease-in-out infinite}
+@keyframes eyeTwitch{0%,78%,84%,100%{transform:none}79%{transform:translate(3px,-2px)}80%{transform:translate(-2px,1px) scaleX(1.01)}81%{transform:translate(1px,1px)}82%{transform:translate(-1px,-1px)}83%{transform:translate(2px,0)}}
+.eye-veins{position:absolute;top:0;left:0;width:100%;height:100%;opacity:.4;animation:veinThrob 1.6s ease-in-out infinite}
+@keyframes veinThrob{0%,65%,100%{opacity:.3}12%{opacity:.65}42%{opacity:.5}}
+.eye-iris-group{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:110px;height:110px;transition:transform 1.8s cubic-bezier(.25,.1,.25,1)}
+.eye-iris-limbal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:108px;height:108px;border-radius:50%;border:3px solid rgba(40,5,10,.8);box-shadow:inset 0 0 8px rgba(0,0,0,.5)}
+.eye-iris-outer{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:102px;height:102px;border-radius:50%;background:conic-gradient(from 0deg,rgba(120,10,20,.9),rgba(200,40,60,.65),rgba(80,5,12,1),rgba(210,45,65,.75),rgba(60,5,8,.9),rgba(180,30,50,.7),rgba(120,10,20,.9));box-shadow:0 0 20px rgba(196,30,58,.65),inset 0 0 12px rgba(0,0,0,.5);animation:irisRot 16s linear infinite,irisBeat 1.6s ease-in-out infinite}
+@keyframes irisRot{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes irisBeat{0%,65%,100%{box-shadow:0 0 18px rgba(196,30,58,.5)}12%{box-shadow:0 0 40px rgba(196,30,58,1),0 0 70px rgba(139,0,0,.4)}42%{box-shadow:0 0 30px rgba(196,30,58,.75),0 0 50px rgba(139,0,0,.3)}}
+.eye-iris-fibers{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:98px;height:98px;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,80,80,.12) 0deg 2deg,transparent 2deg 7deg,rgba(200,40,60,.08) 7deg 9deg,transparent 9deg 14deg);animation:irisRot 22s linear infinite}
+.eye-iris-fibers2{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:94px;height:94px;border-radius:50%;background:repeating-conic-gradient(from 30deg,rgba(180,20,40,.09) 0deg 3deg,transparent 3deg 18deg);animation:irisRot 30s linear infinite reverse}
+.eye-iris-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:75px;height:75px;border-radius:50%;background:radial-gradient(circle,rgba(240,60,80,.95),rgba(180,30,50,.8) 35%,rgba(110,12,25,.5) 65%,transparent);border:1px solid rgba(255,80,80,.1);animation:irisRot 12s linear infinite reverse}
+.eye-pupil{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:15px;height:52px;border-radius:50%;background:radial-gradient(ellipse,#000 55%,rgba(80,10,20,.5));box-shadow:0 0 12px rgba(0,0,0,.95),0 0 25px rgba(0,0,0,.5),0 0 5px rgba(196,30,58,.2);animation:pupilBreathe 6s ease-in-out infinite}
+@keyframes pupilBreathe{0%,100%{width:15px;height:52px}35%{width:13px;height:55px}65%{width:18px;height:46px}85%{width:14px;height:53px}}
+.eye-cornea{position:absolute;top:18%;left:22%;width:55%;height:28%;border-radius:50%;background:linear-gradient(180deg,rgba(255,200,200,.04),transparent);z-index:1}
+.eye-lid-top,.eye-lid-bottom{position:absolute;left:-8px;width:356px;height:90px;background:#080404;z-index:2}
+.eye-lid-top{top:-82px;border-radius:0 0 50% 50%;border-bottom:1.5px solid rgba(196,30,58,.4);box-shadow:0 3px 15px rgba(0,0,0,.9);animation:blinkTop 10s ease-in-out infinite}
+.eye-lid-bottom{bottom:-82px;border-radius:50% 50% 0 0;border-top:1.5px solid rgba(196,30,58,.3);box-shadow:0 -3px 15px rgba(0,0,0,.9);animation:blinkBottom 10s ease-in-out infinite}
+@keyframes blinkTop{0%,43%,49%,100%{transform:translateY(0)}45%{transform:translateY(78px)}47%{transform:translateY(78px)}}
+@keyframes blinkBottom{0%,43%,49%,100%{transform:translateY(0)}45%{transform:translateY(-78px)}47%{transform:translateY(-78px)}}
 
 
 
-  /* ===== FLOATING PARTICLES (dust/embers) ===== */
-  .particle {
-    position: fixed;
-    width: 2px;
-    height: 2px;
-    background: rgba(196, 30, 58, 0.4);
-    border-radius: 50%;
-    z-index: 3;
-    pointer-events: none;
-    animation: floatUp linear infinite;
-  }
-
-  @keyframes floatUp {
-    0%   { transform: translateY(0) translateX(0); opacity: 0; }
-    10%  { opacity: 0.6; }
-    90%  { opacity: 0.3; }
-    100% { transform: translateY(-100vh) translateX(30px); opacity: 0; }
-  }
-
-  /* ===== CORNER BRACKETS (containment UI) ===== */
-  .corner {
-    position: fixed;
-    width: 90px;
-    height: 90px;
-    z-index: 7;
-    pointer-events: none;
-    opacity: 0.35;
-  }
-  .corner-tl { top: 30px; left: 30px; border-top: 2px solid #C41E3A; border-left: 2px solid #C41E3A; }
-  .corner-tr { top: 30px; right: 30px; border-top: 2px solid #C41E3A; border-right: 2px solid #C41E3A; }
-  .corner-bl { bottom: 30px; left: 30px; border-bottom: 2px solid #C41E3A; border-left: 2px solid #C41E3A; }
-  .corner-br { bottom: 30px; right: 30px; border-bottom: 2px solid #C41E3A; border-right: 2px solid #C41E3A; }
-
-  /* ===== HUD TEXT ELEMENTS ===== */
-  .hud-text {
-    position: fixed;
-    z-index: 8;
-    color: rgba(200, 40, 60, 0.45);
-    font-size: 13px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    pointer-events: none;
-  }
-  .hud-top-left {
-    top: 38px; left: 38px;
-  }
-  .hud-top-right {
-    top: 38px; right: 38px;
-    text-align: right;
-  }
-  .hud-bottom-left {
-    bottom: 38px; left: 38px;
-  }
-  .hud-bottom-right {
-    bottom: 38px; right: 38px;
-    text-align: right;
-  }
-
-  .hud-text .blink {
-    animation: blinkText 2s step-end infinite;
-  }
-  @keyframes blinkText {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
-  }
-
-  /* ===== CENTRAL RED EYE / PULSE ===== */
-  .center-pulse {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 300px;
-    height: 300px;
-    border-radius: 50%;
-    z-index: 1;
-    pointer-events: none;
-    background: radial-gradient(
-      circle,
-      rgba(139, 0, 0, 0.06) 0%,
-      rgba(139, 0, 0, 0.02) 40%,
-      transparent 70%
-    );
-    animation: pulse 4s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
-    50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
-  }
-
-  /* ===== HEXAGON GRID (subtle background pattern) ===== */
-  .hex-pattern {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 1;
-    pointer-events: none;
-    opacity: 0.015;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52'%3E%3Cpath d='M30 0L60 15v22L30 52 0 37V15z' fill='none' stroke='%238B0000' stroke-width='0.5'/%3E%3C/svg%3E");
-    background-size: 60px 52px;
-  }
-
-  /* ===== TITLE SECTION (eye + text) ===== */
-  .title-section {
-    position: fixed;
-    top: 8%;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 8;
-    pointer-events: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-  }
-
-  /* Eye container */
-  .eye {
-    width: 300px;
-    height: 150px;
-    position: relative;
-    filter: drop-shadow(0 0 40px rgba(196, 30, 58, 0.45));
-  }
-
-  /* Outer glow ring */
-  .eye-glow {
-    position: absolute;
-    top: -25px; left: -25px;
-    width: 350px;
-    height: 200px;
-    border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(139, 0, 0, 0.12) 0%, transparent 70%);
-    animation: eyeGlow 3s ease-in-out infinite;
-  }
-
-  @keyframes eyeGlow {
-    0%, 100% { opacity: 0.6; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.1); }
-  }
-
-  /* Eye outer shape (sclera) */
-  .eye-outer {
-    width: 300px;
-    height: 150px;
-    border-radius: 50%;
-    border: 2px solid rgba(196, 30, 58, 0.7);
-    position: relative;
-    overflow: hidden;
-    background: radial-gradient(ellipse, rgba(20, 5, 5, 0.95) 0%, rgba(10, 2, 2, 1) 100%);
-    box-shadow:
-      0 0 30px rgba(139, 0, 0, 0.4),
-      0 0 60px rgba(139, 0, 0, 0.15),
-      inset 0 0 20px rgba(139, 0, 0, 0.2),
-      inset 0 0 40px rgba(0, 0, 0, 0.5);
-  }
-
-  /* Blood veins */
-  .eye-vein {
-    position: absolute;
-    background: rgba(139, 0, 0, 0.25);
-    border-radius: 2px;
-    transform-origin: center;
-  }
-  .vein-1 { width: 70px; height: 1px; top: 35px; left: 12px; transform: rotate(15deg); }
-  .vein-2 { width: 60px; height: 1px; top: 105px; left: 14px; transform: rotate(-12deg); }
-  .vein-3 { width: 65px; height: 1px; top: 40px; right: 12px; transform: rotate(-20deg); }
-  .vein-4 { width: 55px; height: 1px; top: 100px; right: 16px; transform: rotate(18deg); }
-  .vein-5 { width: 48px; height: 1px; top: 28px; left: 35px; transform: rotate(35deg); }
-  .vein-6 { width: 42px; height: 1px; top: 115px; right: 30px; transform: rotate(-30deg); }
-
-  /* Iris — outer ring */
-  .eye-iris-outer {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    background: conic-gradient(
-      from 0deg,
-      rgba(120, 10, 20, 0.8),
-      rgba(180, 30, 50, 0.6),
-      rgba(100, 5, 15, 0.9),
-      rgba(196, 30, 58, 0.7),
-      rgba(80, 5, 10, 0.8),
-      rgba(160, 25, 40, 0.6),
-      rgba(120, 10, 20, 0.8)
-    );
-    box-shadow: 0 0 15px rgba(196, 30, 58, 0.5), inset 0 0 8px rgba(0, 0, 0, 0.5);
-    animation: irisRotate 20s linear infinite, irisPulse 4s ease-in-out infinite;
-  }
-
-  @keyframes irisRotate {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
-  }
-
-  /* Iris — inner ring */
-  .eye-iris-inner {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 65px;
-    height: 65px;
-    border-radius: 50%;
-    background: radial-gradient(
-      circle,
-      rgba(220, 50, 70, 0.9) 0%,
-      rgba(160, 20, 40, 0.8) 40%,
-      rgba(100, 10, 20, 0.6) 70%,
-      transparent 100%
-    );
-    border: 1px solid rgba(255, 80, 80, 0.15);
-    animation: irisRotate 15s linear infinite reverse;
-  }
-
-  /* Iris texture lines (radial fibers) */
-  .eye-iris-texture {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 85px;
-    height: 85px;
-    border-radius: 50%;
-    background: repeating-conic-gradient(
-      from 0deg,
-      rgba(255, 100, 100, 0.08) 0deg 3deg,
-      transparent 3deg 12deg
-    );
-    animation: irisRotate 30s linear infinite;
-  }
-
-  /* Pupil — vertical slit */
-  .eye-pupil {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 14px;
-    height: 44px;
-    border-radius: 50%;
-    background: #000;
-    box-shadow:
-      0 0 8px rgba(0, 0, 0, 0.9),
-      0 0 15px rgba(0, 0, 0, 0.5);
-    animation: pupilPulse 4s ease-in-out infinite;
-  }
-
-  @keyframes pupilPulse {
-    0%, 100% { width: 14px; height: 44px; }
-    50% { width: 16px; height: 36px; }
-  }
-
-  /* Glint (primary) */
-  .eye-glint {
-    position: absolute;
-    top: 30%; left: 58%;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255, 180, 180, 0.8);
-    box-shadow: 0 0 4px rgba(255, 200, 200, 0.6);
-  }
-
-  /* Glint (secondary, smaller) */
-  .eye-glint-2 {
-    position: absolute;
-    top: 58%; left: 40%;
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    background: rgba(255, 160, 160, 0.5);
-  }
-
-  /* Subtle iris pulse */
-  @keyframes irisPulse {
-    0%, 100% { box-shadow: 0 0 15px rgba(196, 30, 58, 0.5); }
-    50% { box-shadow: 0 0 30px rgba(196, 30, 58, 0.8), 0 0 50px rgba(139, 0, 0, 0.3); }
-  }
-
-  /* Eyelid blink */
-  .eye-lid-top, .eye-lid-bottom {
-    position: absolute;
-    left: -2px;
-    width: 304px;
-    height: 80px;
-    background: #0a0a0a;
-    z-index: 2;
-  }
-  .eye-lid-top {
-    top: -74px;
-    border-bottom: 1px solid rgba(196, 30, 58, 0.3);
-    animation: blinkTop 6s ease-in-out infinite;
-  }
-  .eye-lid-bottom {
-    bottom: -74px;
-    border-top: 1px solid rgba(196, 30, 58, 0.3);
-    animation: blinkBottom 6s ease-in-out infinite;
-  }
-
-  @keyframes blinkTop {
-    0%, 42%, 48%, 100% { transform: translateY(0); }
-    45% { transform: translateY(70px); }
-  }
-  @keyframes blinkBottom {
-    0%, 42%, 48%, 100% { transform: translateY(0); }
-    45% { transform: translateY(-70px); }
-  }
-
-  /* Title text */
-  .title-text {
-    font-family: 'Share Tech Mono', 'Consolas', 'Courier New', 'Lucida Console', monospace;
-    font-size: 56px;
-    letter-spacing: 20px;
-    padding-left: 20px;
-    white-space: nowrap;
-    text-transform: uppercase;
-    color: rgba(210, 40, 60, 0.7);
-    text-shadow:
-      0 0 10px rgba(196, 30, 58, 0.6),
-      0 0 30px rgba(139, 0, 0, 0.4),
-      0 0 60px rgba(139, 0, 0, 0.15),
-      0 2px 4px rgba(0, 0, 0, 0.8);
-    position: relative;
-    animation: titleGlitch 8s infinite;
-  }
-
-  @keyframes titleGlitch {
-    0%, 92%, 100% { transform: none; opacity: 1; }
-    93% { transform: translateX(-3px) skewX(-0.5deg); opacity: 0.85; }
-    94% { transform: translateX(2px); opacity: 1; }
-    95% { transform: none; opacity: 0.9; }
-    96% { transform: translateX(1px) skewX(0.3deg); opacity: 1; }
-  }
-
-  /* Thin line separator */
-  .title-line {
-    width: 350px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(196, 30, 58, 0.5), transparent);
-    box-shadow: 0 0 8px rgba(196, 30, 58, 0.2);
-  }
+/* Iris flash scare */
+.iris-flash{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(255,50,50,.3),transparent 70%);opacity:0;z-index:1;animation:flashScare 12s ease-in-out infinite}
+@keyframes flashScare{0%,90%,100%{opacity:0}92%{opacity:.8}94%{opacity:0}95%{opacity:.6}97%{opacity:0}}
 </style>
 </head>
 <body>
+<canvas id="noise-canvas"></canvas>
+<div class="hex-pattern"></div>
+<div class="center-pulse"></div>
+<div class="grid-overlay"></div>
+<div class="scanner-sweep-2"></div>
+<div class="vignette"></div>
+<div class="title-section">
+<div class="eye">
+<div class="eye-glow"></div>
+<div class="eye-outer">
+<svg class="eye-veins" viewBox="0 0 340 170" xmlns="http://www.w3.org/2000/svg">
+<path d="M8,38 Q30,36 65,48 Q80,52 95,58" stroke="#8B0000" stroke-width="1" fill="none" opacity=".65"/>
+<path d="M95,58 L108,60" stroke="#8B0000" stroke-width=".6" fill="none" opacity=".45"/>
+<path d="M95,58 L105,50" stroke="#8B0000" stroke-width=".5" fill="none" opacity=".35"/>
+<path d="M65,48 L72,40" stroke="#8B0000" stroke-width=".5" fill="none" opacity=".3"/>
+<path d="M4,72 Q28,70 58,68 Q42,76 38,84" stroke="#8B0000" stroke-width=".8" fill="none" opacity=".55"/>
+<path d="M10,108 Q38,105 72,95 Q88,90 100,86" stroke="#8B0000" stroke-width="1" fill="none" opacity=".6"/>
+<path d="M100,86 L112,82" stroke="#8B0000" stroke-width=".5" fill="none" opacity=".4"/>
+<path d="M72,95 L78,102" stroke="#8B0000" stroke-width=".4" fill="none" opacity=".3"/>
+<path d="M6,132 Q25,128 62,118" stroke="#8B0000" stroke-width=".7" fill="none" opacity=".5"/>
+<path d="M332,34 Q310,36 275,48 Q260,52 245,58" stroke="#8B0000" stroke-width="1" fill="none" opacity=".65"/>
+<path d="M245,58 L232,60" stroke="#8B0000" stroke-width=".6" fill="none" opacity=".45"/>
+<path d="M245,58 L238,48" stroke="#8B0000" stroke-width=".5" fill="none" opacity=".35"/>
+<path d="M275,48 L268,38" stroke="#8B0000" stroke-width=".5" fill="none" opacity=".3"/>
+<path d="M336,78 Q312,74 268,70" stroke="#8B0000" stroke-width=".8" fill="none" opacity=".55"/>
+<path d="M330,112 Q302,108 268,98 Q252,92 240,88" stroke="#8B0000" stroke-width="1" fill="none" opacity=".6"/>
+<path d="M240,88 L228,84" stroke="#8B0000" stroke-width=".5" fill="none" opacity=".4"/>
+<path d="M334,138 Q315,132 278,120" stroke="#8B0000" stroke-width=".7" fill="none" opacity=".5"/>
+<path d="M140,8 Q148,28 155,52" stroke="#8B0000" stroke-width=".6" fill="none" opacity=".35"/>
+<path d="M200,6 Q195,26 188,48" stroke="#8B0000" stroke-width=".6" fill="none" opacity=".35"/>
+<path d="M135,162 Q145,142 155,118" stroke="#8B0000" stroke-width=".6" fill="none" opacity=".35"/>
+<path d="M205,164 Q198,144 190,120" stroke="#8B0000" stroke-width=".6" fill="none" opacity=".35"/>
+</svg>
+<div class="eye-iris-group" id="irisGroup">
+<div class="eye-iris-limbal"></div>
+<div class="eye-iris-outer"></div>
+<div class="eye-iris-fibers"></div>
+<div class="eye-iris-fibers2"></div>
+<div class="eye-iris-inner"></div>
+<div class="eye-pupil"></div>
+<div class="iris-flash"></div>
+</div>
+<div class="eye-cornea"></div>
+<div class="eye-lid-top"></div>
+<div class="eye-lid-bottom"></div>
+</div>
+</div>
+<div class="title-line"></div>
+<div class="title-text" data-text="Anomaly Protocol">Anomaly Protocol</div>
+</div>
+<div class="crt-lines"></div>
+<div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div><div class="corner corner-br"></div>
+<div class="hud-text hud-top-left">SYS://CONTAINMENT_PROTOCOL<br><span style="color:rgba(196,30,58,.25)">STATUS: <span class="blink">ACTIVE</span></span></div>
+<div class="hud-text hud-top-right">FACILITY-07 // SECTOR-4<br><span style="color:rgba(196,30,58,.25)">CLEARANCE: ██████</span></div>
+<div class="hud-text hud-bottom-left">SURVEILLANCE FEED #0471<br><span id="timestamp" style="color:rgba(196,30,58,.25)"></span></div>
+<div class="hud-text hud-bottom-right">ANOMALY PROTOCOL v2.1<br><span style="color:rgba(196,30,58,.25)">BREACH LEVEL: <span class="blink" style="color:rgba(255,50,50,.3)">KETER</span></span></div>
+<script>
+const canvas=document.getElementById('noise-canvas'),ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=window.innerWidth/4;canvas.height=window.innerHeight/4}
+resizeCanvas();window.addEventListener('resize',resizeCanvas);
+function renderNoise(){const w=canvas.width,h=canvas.height,id=ctx.createImageData(w,h),d=id.data;
+for(let i=0;i<d.length;i+=4){const v=Math.random()*255;d[i]=v*.3;d[i+1]=v*.15;d[i+2]=v*.15;d[i+3]=255}
+ctx.putImageData(id,0,0);requestAnimationFrame(renderNoise)}
+renderNoise();
 
-  <!-- Noise canvas -->
-  <canvas id="noise-canvas"></canvas>
+function createParticle(){const p=document.createElement('div');p.classList.add('particle');
+p.style.left=Math.random()*100+'vw';p.style.bottom='-10px';
+const s=(1+Math.random()*2)+'px';p.style.width=s;p.style.height=s;p.style.opacity=.2+Math.random()*.4;
+const dur=8+Math.random()*12;p.style.animationDuration=dur+'s';p.style.animationDelay=Math.random()*2+'s';
+if(Math.random()>.6)p.style.background=`rgba(${150+Math.random()*50},${140+Math.random()*30},${140+Math.random()*30},.3)`;
+document.body.appendChild(p);setTimeout(()=>p.remove(),(dur+2)*1000)}
+for(let i=0;i<15;i++)setTimeout(createParticle,Math.random()*5000);
+setInterval(createParticle,800);
 
-  <!-- Hex pattern background -->
-  <div class="hex-pattern"></div>
+function updateTimestamp(){const n=new Date();
+document.getElementById('timestamp').textContent=
+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+
+String(n.getSeconds()).padStart(2,'0')+'.'+String(n.getMilliseconds()).padStart(3,'0');
+requestAnimationFrame(updateTimestamp)}
+updateTimestamp();
 
-  <!-- Center red pulse -->
-  <div class="center-pulse"></div>
+// EYE LOOK-AROUND — creepy scanning
+const iris=document.getElementById('irisGroup');
+let lookTargets=[{x:0,y:0},{x:-12,y:-4},{x:10,y:3},{x:-6,y:5},{x:14,y:-2},{x:0,y:0},{x:-15,y:0},{x:8,y:-5}];
+let lookIdx=0;
+function eyeLook(){
+const t=lookTargets[lookIdx%lookTargets.length];lookIdx++;
+// Occasionally snap fast (horror)
+const fast=Math.random()<.15;
+iris.style.transition=fast?'transform .15s ease-out':'transform 2s cubic-bezier(.25,.1,.25,1)';
+iris.style.transform=`translate(calc(-50% + ${t.x}px), calc(-50% + ${t.y}px))`;
+// Random next delay — sometimes very short (rapid look)
+const delay=fast?300+Math.random()*500:1500+Math.random()*4000;
+setTimeout(eyeLook,delay);
+}
+setTimeout(eyeLook,2000);
 
-  <!-- Grid overlay -->
-  <div class="grid-overlay"></div>
+// Occasional pupil DILATION scare (slower, subtler)
+const pupil=document.querySelector('.eye-pupil');
+function dilateScare(){
+if(Math.random()<.25){
+pupil.style.transition='width .4s ease-out,height .4s ease-out';
+pupil.style.width='28px';pupil.style.height='28px';pupil.style.borderRadius='50%';
+setTimeout(()=>{pupil.style.transition='width 2.5s ease-in,height 2.5s ease-in';
+pupil.style.width='';pupil.style.height='';pupil.style.borderRadius='';},600);
+}
+setTimeout(dilateScare,12000+Math.random()*18000);
+}
+setTimeout(dilateScare,8000);
 
-  <!-- Scanner sweep -->
-  <div class="scanner-sweep-2"></div>
-
-  <!-- Vignette -->
-  <div class="vignette"></div>
-
-
-  <!-- Title section -->
-  <div class="title-section">
-    <div class="eye">
-      <div class="eye-glow"></div>
-      <div class="eye-outer">
-        <div class="eye-vein vein-1"></div>
-        <div class="eye-vein vein-2"></div>
-        <div class="eye-vein vein-3"></div>
-        <div class="eye-vein vein-4"></div>
-        <div class="eye-vein vein-5"></div>
-        <div class="eye-vein vein-6"></div>
-        <div class="eye-iris-texture"></div>
-        <div class="eye-iris-outer">
-          <div class="eye-iris-inner"></div>
-        </div>
-        <div class="eye-pupil"></div>
-        <div class="eye-glint"></div>
-        <div class="eye-glint-2"></div>
-        <div class="eye-lid-top"></div>
-        <div class="eye-lid-bottom"></div>
-      </div>
-    </div>
-    <div class="title-line"></div>
-    <div class="title-text">Anomaly Protocol</div>
-  </div>
-
-  <!-- Corner brackets -->
-  <div class="corner corner-tl"></div>
-  <div class="corner corner-tr"></div>
-  <div class="corner corner-bl"></div>
-  <div class="corner corner-br"></div>
-
-  <!-- HUD text -->
-  <div class="hud-text hud-top-left">
-    SYS://CONTAINMENT_PROTOCOL<br>
-    <span style="color: rgba(196,30,58,0.25);">STATUS: <span class="blink">ACTIVE</span></span>
-  </div>
-  <div class="hud-text hud-top-right">
-    FACILITY-07 // SECTOR-4<br>
-    <span style="color: rgba(196,30,58,0.25);">CLEARANCE: ██████</span>
-  </div>
-  <div class="hud-text hud-bottom-left">
-    SURVEILLANCE FEED #0471<br>
-    <span id="timestamp" style="color: rgba(196,30,58,0.25);"></span>
-  </div>
-  <div class="hud-text hud-bottom-right">
-    ANOMALY PROTOCOL v2.1<br>
-    <span style="color: rgba(196,30,58,0.25);">BREACH LEVEL: <span class="blink" style="color: rgba(255,50,50,0.3);">KETER</span></span>
-  </div>
-
-  <script>
-    // ===== NOISE CANVAS =====
-    const canvas = document.getElementById('noise-canvas');
-    const ctx = canvas.getContext('2d');
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth / 4;
-      canvas.height = window.innerHeight / 4;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    function renderNoise() {
-      const w = canvas.width;
-      const h = canvas.height;
-      const imageData = ctx.createImageData(w, h);
-      const data = imageData.data;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const v = Math.random() * 255;
-        data[i] = v * 0.3;
-        data[i+1] = v * 0.15;
-        data[i+2] = v * 0.15;
-        data[i+3] = 255;
-      }
-
-      ctx.putImageData(imageData, 0, 0);
-      requestAnimationFrame(renderNoise);
-    }
-    renderNoise();
-
-    // ===== FLOATING PARTICLES =====
-    function createParticle() {
-      const p = document.createElement('div');
-      p.classList.add('particle');
-      p.style.left = Math.random() * 100 + 'vw';
-      p.style.bottom = '-10px';
-      p.style.width = (1 + Math.random() * 2) + 'px';
-      p.style.height = p.style.width;
-      p.style.opacity = 0.2 + Math.random() * 0.4;
-
-      const duration = 8 + Math.random() * 12;
-      p.style.animationDuration = duration + 's';
-      p.style.animationDelay = Math.random() * 2 + 's';
-
-      if (Math.random() > 0.6) {
-        p.style.background = `rgba(${150 + Math.random()*50}, ${140 + Math.random()*30}, ${140 + Math.random()*30}, 0.3)`;
-      }
-
-      document.body.appendChild(p);
-      setTimeout(() => p.remove(), (duration + 2) * 1000);
-    }
-
-    for (let i = 0; i < 15; i++) {
-      setTimeout(createParticle, Math.random() * 5000);
-    }
-    setInterval(createParticle, 800);
-
-    // ===== TIMESTAMP =====
-    function updateTimestamp() {
-      const now = new Date();
-      const h = String(now.getHours()).padStart(2, '0');
-      const m = String(now.getMinutes()).padStart(2, '0');
-      const s = String(now.getSeconds()).padStart(2, '0');
-      const ms = String(now.getMilliseconds()).padStart(3, '0');
-      document.getElementById('timestamp').textContent = `${h}:${m}:${s}.${ms}`;
-      requestAnimationFrame(updateTimestamp);
-    }
-    updateTimestamp();
-  </script>
-
+</script>
 </body>
 </html>
